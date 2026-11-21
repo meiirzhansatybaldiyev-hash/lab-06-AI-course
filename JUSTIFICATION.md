@@ -1,93 +1,57 @@
-# JUSTIFICATION — the design of the harness, and why
-<!-- STUDENT: replace -->
+# JUSTIFICATION — Lab 06: The Harness That Says No
 
-Replace this whole template with your own text. Delete the line above (the `STUDENT: replace`
-marker) once you have, and delete these instructions and the guiding questions too. Keep the headings
-that follow. Which dimension each section is graded against is in the README.
+## What the system may do
 
-Two rules for the whole document:
+The system may produce a non-binding `shortlist` or `reject` recommendation and a 0–100 suitability score for the single purpose `scholarship_screening`, using only fields tied to published criteria. It must not award or deny a scholarship: a human selection committee makes and records the final decision. Names and university names are withheld from the model to reduce language, gender-coding and prestige proxies.
 
-- **Every claim about a law needs a citation to the instrument and the provision** it rests on,
-  written so a reader can find the text. You identify the instruments yourself, from the primary text.
-  A chat model's statement is not a citation.
-- **Everything you describe must be in the code or in the submitted run.** A control you describe
-  but did not build, or a refusal you state but never triggered, belongs under "what the design still
-  fails to protect against".
+## What the system must refuse
 
-The guiding questions are prompts, not a form.
+The harness refuses invalid numeric/type data (`invalid_input`), any non-scholarship purpose (`purpose_not_allowed`), profiles under 18 under this prototype's conservative scope (`minor`), absent automated-processing consent (`no_consent`) and instruction-like text in applicant-controlled name/university/program fields (`prompt_injection_attempt`). These refusals happen before model inference and are logged. The minor rule is a prototype policy, not a claim that minors are legally ineligible for scholarships; a real fund needs a lawful guardian-consent and manual alternative route.
 
-## 1. What the system may do
+Kazakhstan Personal Data Law No. 94-V, Article 19-1(1), restricts consequential automated processing absent consent or a statutory exception. Article 19-1(2)-(3) requires notice about automated processing and its consequences, the opportunity to object, explanation of rights protection, and consideration of objections within three working days. A `True` boolean is not proof of valid informed consent; production deployment must record consent provenance, notify applicants, enable withdrawal and provide the statutory objection process.
 
-(Dimension: Integration of Constraints into the Design.)
+Prompt-injection refusal is an engineering safeguard, not a statutory regex requirement. It is a targeted response to foreseeable misuse under AI Law No. 230-VIII, Article 18(1)(2)-(3). It is incomplete by itself; blinding is the primary control.
 
-- What is the system for, stated narrowly? What decisions may it make on its own, and which may it only
-  inform?
-- For each control you built (input validation, blinding, refusal, log, escalation): which
-  constraint made you build it, and where in the code can a reader find it?
-- Did any constraint change the architecture itself, so that the design would be different without it?
-  Name a decision you made differently because of a constraint, and what you would have done otherwise.
+## Input validation and blinding
 
-## 2. What it must refuse
+Input validation checks GPA 0–4, exam score 0–140, income bracket 1–5, achievements 0–5, age 16–40 and a real boolean consent field. The baseline's ordinary path also showed why edge cases matter: the bare pipeline accepted an impossible GPA 9.9 and exam score -5 for inference. Validation implements risk mitigation under AI Law Article 18(1) and supports the necessary/sufficient-data and protection duties in Personal Data Law Article 25(2)(1)-(2).
 
-(Dimension: Refusal Boundaries and Enforcement.)
+Blinding is tied to **fairness and non-discrimination**. The 2026 Constitution, Article 16(2), prohibits discrimination on grounds including sex, nationality and language. Baseline name-language flips were 2/40 (5.0%, CI 1.4–16.5%) and gender-coded-name flips 4/40 (10.0%, CI 4.0–23.1%), each against a null-name floor of 0/40 (CI 0.0–8.8%); intervals overlap. University flips were 1/40, exactly the null-university floor (1/40). But the flagship-minus-regional directional score gap was +2.5 (CI +1.1 to +4.1; p=0.002). This supports precautionary blinding, not a conclusion that illegal discrimination is proven. Personal Data Law Article 7(9) bars processing personal data excessive in content and scope relative to purpose; whether university is unnecessary must be tested against the fund's real published criteria.
 
-- What does it refuse (purposes, inputs, applicants)? Where is each refusal enforced in code, and
-  where in your submitted run did it fire?
-- For each refusal: **which legitimate case does it also block**, and who bears that cost? Is that cost
-  acceptable, and why?
-- What happens to a refused request: is it recorded, is anyone told, can the person ask for a decision to
-  be made by a human instead?
+The cost is losing potentially legitimate institutional context. Any genuinely relevant university-specific eligibility rule should be transparent, consistently applied and reviewed by a person, not inferred by a general language model from institutional names.
 
-## 3. What record it keeps
+## Human escalation
 
-(Dimension: Accountability Record and Auditability.)
+All model rejections, unparseable responses and scores in the inclusive band 45–60 are marked for human review. The band is based on the baseline distribution: rejected scores begin at 45 and the shortlist first quartile is 60. This intentionally accepts reviewer workload because an unreviewed rejection can remove an applicant from consideration. The harness records `outcome="escalate"` and `escalated_to_human=true`; an operational system must connect this state to an assigned reviewer and record the review result. The committee retains final authority.
 
-- What is the **audit question** your record is designed to answer (for example, "why did this
-  applicant get this outcome, and could someone else reconstruct it without re-running the model?")?
-  State it in one sentence, then show that a record in `decisions.jsonl` answers it.
-- What is in each record, and what is left out on purpose (for example, personal data you chose not to
-  store)? Why that line?
-- How long is the record kept, who may read it, who may change it, and what stops a record being
-  edited after the fact? What does the record not let you reconstruct?
+The legal link is Personal Data Law Article 19-1(2)-(3) (objection and timely consideration), AI Law Article 7(2) (information and objection), and AI Law Article 17(2)(1) (low-autonomy recommendations where a person always makes the final choice/action). The precise escalation rule is our safety design; the law does not dictate a 45–60 score band or say every rejection must be reviewed.
 
-## 4. The legal constraints
+## Accountability record
 
-(Dimension: Identification and Citation of Legal Constraints.)
+`decisions.jsonl` is generated by the submitted run. Each record includes record/application IDs, SHA-256 hash of the text shown, field names shown/withheld, model/prompt version, harness settings, raw reply, decision/score, controls fired, outcome/reason, human-review flag and UTC timestamp. It stores field names rather than a second copy of all input values. It is still protected because IDs and raw outputs may be linkable. Access, encryption, retention and deletion rules must be implemented before real use.
 
-- Which instruments apply to an automated screening decision about people, and why do they
-  apply to this system (jurisdiction, subject matter, who is the operator)? Cite the instrument and the
-  provision for each.
-- For each, what does the law **require** of the system, and what does it merely **permit** or leave
-  to you? Where did you do more than the law requires, and why?
-- Where is the text you cite stated to apply to automated decisions specifically? If you could
-  not find a provision for a control, say so rather than inventing one.
+This is tied to AI Law Articles 8(1)-(2) and 15(2)(1)-(3) (continuous control, role-based responsibility, risk management, security and system documentation) and Personal Data Law Article 25(2)(2) (organizational and technical data-protection measures). Neither law requires this exact JSONL schema; it is an audit-design choice.
 
-## 5. The ethical principles
+## Trade-offs and limits
 
-(Dimension: Identification of Applicable Ethical Principles.)
+- **Blinding vs context:** removes tested proxy fields but changes prompt structure; profile-level score/outcome changes must be measured, not assumed causal.
+- **Human review vs throughput:** review of all rejections and borderline cases increases reviewer workload and delays; the fund must staff it and monitor reversals and queue time.
+- **Refusal vs access:** missing consent and the minor scope rule block automatic processing; applicants need a manual alternative and appeal mechanism.
+- **Audit vs privacy:** hashes and field names reduce duplication but IDs/raw model output remain sensitive; restrict retention and access.
+- **Counterfactual cost:** the optional counterfactual check is off because blinding already makes pair prompts identical and counterfactual testing doubles model calls.
+- **Small sample:** 40 pairs per attribute cannot rule out modest effects. Baseline intervals overlap the floors; more independent validation is required.
 
-- Which principles govern an automated screening decision, and which decision in **this** system does
-  each bear on (not in general)? Cite the source in which you found each principle named, and say
-  what status that text has.
-- Where do the principles conflict with one another in your design (for example, between
-  treating applicants identically and treating applicants fairly given what you measured)? Which did
-  you put first, and why?
-- Where does ethics demand something the law does not?
+The hardest control to map to one precise legal clause is the exact prompt-injection regex. No law requires matching particular strings; it is an implementation of risk management under AI Law Article 18. Likewise, statutes require control/documentation/protection, not the literal JSONL file format.
 
-## 6. The trade-offs
+## Legal instruments and named ethical principles
 
-(Dimension: Trade-off Analysis and Justification.)
+1. Constitution of the Republic of Kazakhstan (in force 1 July 2026), Article 16(2) (non-discrimination), Article 21(1) (privacy/data protection): https://www.gov.kz/article/232335?lang=en
+2. Law of the Republic of Kazakhstan dated 21 May 2013 No. 94-V, *On Personal Data and their Protection*, Articles 7(1), 7(9), 19-1(1)-(3), 25(2): https://adilet.zan.kz/eng/docs/Z1300000094
+3. Law of the Republic of Kazakhstan dated 17 November 2025 No. 230-VIII, *On Artificial Intelligence*, Articles 7-11, 15, 17-18 and 20-21: https://adilet.zan.kz/eng/docs/Z2500000230
+4. UNESCO, *Recommendation on the Ethics of Artificial Intelligence* (adopted 23 November 2021), paragraphs 27-38: safety/security, fairness/non-discrimination, privacy, accountability, human oversight and transparency. It is a voluntary ethical recommendation, not a binding Kazakhstan statute: https://www.unesco.org/en/legal-affairs/recommendation-ethics-artificial-intelligence
 
-- For each control: what does it cost (errors, speed, reviewer time, applicant privacy, extra model
-  calls), and what harm does it prevent? Use your before-and-after measurement where you can.
-- The width of your escalation band is a trade-off too: how many applicants does it send to a person, who reads
-  them, and what happens to the cases outside it that nobody re-checks? A threshold calibrated on one
-  configuration does not transfer to another: did you recalibrate it after you changed what the model
-  sees, and what share was actually escalated?
-- Why did you choose the balance you did, and what would make you choose differently?
-- What does the design **still fail to protect against**? What would closing that gap take, and why did
-  you not do it?
+The fund must determine its legal role, lawful basis and AI-system classification, and obtain Kazakhstan legal review before deployment. These materials are not legal advice.
 
 ## AI-use declaration
 
-Half a page: which AI tools you used in this assignment and for what. If you used none, say so.
+ChatGPT was used to inspect the submitted notebook, help edit the control code, structure the report and justification, and identify/check primary legal texts. The model did not execute the Qwen baseline or the controlled Qwen rerun in this environment. Baseline figures above are copied from the notebook's saved outputs. No post-control figures or decision-log records have been invented: the modified notebook generates them only when rerun on Colab T4. The author remains responsible for checking the law and validating the final evidence.
