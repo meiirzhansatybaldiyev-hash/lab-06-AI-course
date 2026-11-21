@@ -1,0 +1,53 @@
+{
+  "harness_controls": [
+    "validate_input",
+    "blind",
+    "refuse",
+    "log",
+    "escalate"
+  ],
+  "format_problems": [],
+  "entries": [
+    {
+      "control": "validate_input",
+      "principle": "Safety, security and robustness",
+      "principle_source": "UNESCO Recommendation on the Ethics of AI (2021), paragraphs 27 and 34 (harm prevention; privacy-by-design and impact assessment)",
+      "instrument": "Law of the Republic of Kazakhstan dated 17 November 2025 No. 230-VIII On Artificial Intelligence; Law of the Republic of Kazakhstan dated 21 May 2013 No. 94-V On Personal Data and their Protection",
+      "provision": "AI Law, Article 18(1)(1)-(3) (risk identification, assessment and targeted controls); Personal Data Law, Article 25(2)(1)-(2) (necessary/sufficient data list and protection measures)",
+      "why_here": "The bare edge-case exercise accepted an impossible GPA/exam profile for model processing; range/type validation blocks invalid values before they can distort a scholarship recommendation."
+    },
+    {
+      "control": "blind",
+      "principle": "Fairness and non-discrimination",
+      "principle_source": "UNESCO Recommendation on the Ethics of AI (2021), paragraphs 28-30",
+      "instrument": "Constitution of the Republic of Kazakhstan (in force 1 July 2026); Law of the Republic of Kazakhstan dated 21 May 2013 No. 94-V On Personal Data and their Protection",
+      "provision": "Constitution, Article 16(2) (non-discrimination including sex, nationality and language); Personal Data Law, Article 7(9) (prohibition on processing personal data excessive in content and scope relative to the processing purpose)",
+      "why_here": "Name-language and gender-coded-name outcome intervals overlapped the null-name floor, while the university score gap favoured flagship institutions; name and university are therefore removed from the model prompt as a precaution, not because the run proves unlawful discrimination."
+    },
+    {
+      "control": "refuse",
+      "principle": "Purpose limitation, privacy and protection from harm",
+      "principle_source": "UNESCO Recommendation on the Ethics of AI (2021), paragraphs 27 and 32-34",
+      "instrument": "Law of the Republic of Kazakhstan dated 21 May 2013 No. 94-V On Personal Data and their Protection; Law of the Republic of Kazakhstan dated 17 November 2025 No. 230-VIII On Artificial Intelligence",
+      "provision": "Personal Data Law, Articles 7(1) and 19-1(1)-(3) (consent, limits on consequential automated processing, explanation and objection); AI Law, Articles 11(1)-(3) and 18(1)(2)-(3) (safety and foreseeable-misuse risk controls)",
+      "why_here": "The harness refuses non-scholarship purposes, minors under this prototype's conservative policy, absent consent, invalid inputs and instruction-like text before inference; the assignment's ethnicity-ranking test must not be processed."
+    },
+    {
+      "control": "log",
+      "principle": "Accountability, traceability and auditability",
+      "principle_source": "UNESCO Recommendation on the Ethics of AI (2021), paragraphs 35-38 (assignable responsibility, oversight and transparency)",
+      "instrument": "Law of the Republic of Kazakhstan dated 17 November 2025 No. 230-VIII On Artificial Intelligence; Law of the Republic of Kazakhstan dated 21 May 2013 No. 94-V On Personal Data and their Protection",
+      "provision": "AI Law, Articles 8(1)-(2) and 15(2)(1)-(3) (continuous control, role-based responsibility, risk management and system documentation); Personal Data Law, Article 25(2)(2) (organizational and technical data-protection measures)",
+      "why_here": "A structured JSONL record captures the model/prompt version, input hash, shown/withheld field names, raw reply, outcome, reason, controls and human-review flag so the baseline disparities and every controlled decision can be audited without storing a second copy of profile fields."
+    },
+    {
+      "control": "escalate",
+      "principle": "Human oversight, contestability and human determination",
+      "principle_source": "UNESCO Recommendation on the Ethics of AI (2021), paragraphs 35-38",
+      "instrument": "Law of the Republic of Kazakhstan dated 21 May 2013 No. 94-V On Personal Data and their Protection; Law of the Republic of Kazakhstan dated 17 November 2025 No. 230-VIII On Artificial Intelligence",
+      "provision": "Personal Data Law, Article 19-1(2)-(3) (objection and its consideration within three working days); AI Law, Article 7(2) (information and objection rights) and Article 17(2)(1) (low-autonomy recommendations with final choice/actions by a person)",
+      "why_here": "All model rejections, unparseable replies and borderline scores are marked for human review; this responds to the consequences of a scholarship rejection and supports, but does not by itself implement, the statutory objection-handling process."
+    }
+  ],
+  "note": "This register is configured for the notebook. Re-run Part 5 to regenerate it from CONTROL_REGISTER."
+}
